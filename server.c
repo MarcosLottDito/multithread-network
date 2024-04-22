@@ -24,6 +24,7 @@ void *clientThread(void *data)
         if (clientResponse == 0)
         {
             close(clientData->clientSocket);
+            printf("Aguardando solicitação.\n");
             pthread_exit(EXIT_SUCCESS);
         }
     }
@@ -38,6 +39,7 @@ void *clientThread(void *data)
     {
         memset(buf, 0, BUFSZ);
         close(clientData->clientSocket);
+        printf("Aguardando solicitação.\n");
         pthread_exit(EXIT_SUCCESS);
     }
 
@@ -66,6 +68,7 @@ void *clientThread(void *data)
 
     memset(buf, 0, BUFSZ);
     close(clientData->clientSocket);
+    printf("Aguardando solicitação.\n");
     pthread_exit(EXIT_SUCCESS);
 }
 
@@ -94,7 +97,6 @@ int main(int argc, char **argv)
         log_exit("Error at listen");
 
     printf("Aguardando solicitação.\n");
-
     while (1)
     {
         struct sockaddr_storage clientStorage;

@@ -69,7 +69,7 @@ int main(int argc, char **argv)
                     printf("<Encerrar programa>\n");
                     return EXIT_SUCCESS;
                 }
-                printf("Server response: %s\n", buf);
+                printf("%s\n", buf);
             }
 
             close(clientSocket);
