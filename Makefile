@@ -1,7 +1,10 @@
-all:
-	gcc -Wall -c common.c
-	gcc -Wall client.c common.o -o client
-	gcc -Wall -lpthread server.c common.o -o server
+all: dirs
+	gcc -Wall -c common.c -o object/common.o
+	gcc -Wall client.c object/common.o -o bin/client
+	gcc -Wall -lpthread server.c object/common.o -o bin/server
+
+dirs:
+	mkdir -p bin object
 
 clean:
-	@rm -f common.o client server
+	@rm -f object/common.o bin/client bin/server
