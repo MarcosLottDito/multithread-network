@@ -10,7 +10,6 @@ struct client_data
 void *clientThread(void *data)
 {
     struct client_data *clientData = (struct client_data *)data;
-    struct sockaddr *clientAddress = (struct sockaddr *)(&clientData->clientStorage);
 
     int clientResponse = -1;
 
@@ -28,9 +27,6 @@ void *clientThread(void *data)
             pthread_exit(EXIT_SUCCESS);
         }
     }
-
-    char clientAddressString[BUFSZ];
-    address_to_string(clientAddress, clientAddressString, BUFSZ);
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
@@ -97,8 +93,6 @@ int main(int argc, char **argv)
     if (0 != listen(serverSocket, 10))
         log_exit("Error at listen");
 
-    char addressString[BUFSZ];
-    address_to_string(address, addressString, BUFSZ);
     printf("Aguardando solicitação.\n");
 
     while (1)

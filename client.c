@@ -48,9 +48,6 @@ int main(int argc, char **argv)
             if (serverResponse == 0)
                 continue;
 
-            char addressString[BUFSZ];
-            address_to_string(address, addressString, BUFSZ);
-
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
 

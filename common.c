@@ -47,42 +47,6 @@ void log_exit(const char *message)
     exit(EXIT_FAILURE);
 }
 
-void address_to_string(const struct sockaddr *address, char *string, size_t stringSize)
-{
-    int version = 0;
-    char addressString[INET6_ADDRSTRLEN + 1] = "";
-    uint16_t port;
-
-    if (address->sa_family == AF_INET)
-        version = 4;
-    if (address->sa_family == AF_INET6)
-        version = 6;
-    if (version == 0)
-        log_exit("Unknown address family");
-
-    if (version == 4)
-    {
-        struct sockaddr_in *addresV4 = (struct sockaddr_in *)address;
-        if (!inet_ntop(AF_INET, &(addresV4->sin_addr), addressString, INET6_ADDRSTRLEN + 1))
-        {
-            log_exit("Error at inet_ntop");
-        }
-        port = ntohs(addresV4->sin_port);
-    }
-    if (version == 6)
-    {
-        struct sockaddr_in6 *addresV6 = (struct sockaddr_in6 *)address;
-        if (!inet_ntop(AF_INET6, &(addresV6->sin6_addr), addressString, INET6_ADDRSTRLEN + 1))
-        {
-            log_exit("Error at inet_ntop");
-        }
-        port = ntohs(addresV6->sin6_port);
-    }
-
-    if (string)
-        snprintf(string, stringSize, "IPv%d %s %hu", version, addressString, port);
-}
-
 int server_init(const char *version, const char *port, struct sockaddr_storage *storage)
 {
     uint16_t serverPort = (uint16_t)atoi(port);
