@@ -14,10 +14,26 @@ void *clientThread(void *data)
 
     char clientAddressString[BUFSZ];
     address_to_string(clientAddress, clientAddressString, BUFSZ);
-    printf("[LOG] Connection from %s\n", clientAddressString);
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
+
+    int clientResponse = -1;
+
+    while (clientResponse == -1)
+    {
+        printf("Corrida disponível:\n");
+        printf("0 - Recusar\n");
+        printf("1 - Aceitar\n");
+
+        clientResponse = menu();
+        send(clientData->clientSocket, &clientResponse, sizeof(clientResponse), 0);
+        if (clientResponse == 0)
+        {
+            close(clientData->clientSocket);
+            pthread_exit(EXIT_SUCCESS);
+        }
+    }
 
     while (1)
     {
@@ -25,9 +41,7 @@ void *clientThread(void *data)
 
         // If the client closed the connection, break the loop
         if (bytesRead <= 0)
-        {
             break;
-        }
 
         printf("[mensagem]: %s, %d bytes: %s", clientAddressString, (int)bytesRead, buf);
 
@@ -50,11 +64,11 @@ void *clientThread(void *data)
 int main(int argc, char **argv)
 {
     if (argc != 3)
-        server_usage(argc, argv);
+        server_usage();
 
     struct sockaddr_storage storage;
     if (0 != server_init(argv[1], argv[2], &storage))
-        log_exit("Error at serverInit");
+        server_usage();
 
     int serverSocket = socket(storage.ss_family, SOCK_STREAM, 0);
     if (serverSocket == -1)
@@ -73,7 +87,7 @@ int main(int argc, char **argv)
 
     char addressString[BUFSZ];
     address_to_string(address, addressString, BUFSZ);
-    printf("[LOG] Listening on %s. Waiting connections\n", addressString);
+    printf("Aguardando solicitação.\n");
 
     while (1)
     {

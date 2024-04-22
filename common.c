@@ -6,16 +6,16 @@ void log_exit(const char *message)
     exit(EXIT_FAILURE);
 }
 
-void server_usage(int argc, char **argv)
+void server_usage()
 {
-    printf("Usage: %s <v4|v6> <port>\n", argv[0]);
-    printf("Example: v4 5151\n");
+    printf("Usage: <ipv4|ipv6> <port>\n");
+    printf("Example: ipv4 5151\n");
     exit(EXIT_FAILURE);
 }
 
-void client_usage(int argc, char **argv)
+void client_usage()
 {
-    printf("Usage: %s <host> <port>\n", argv[0]);
+    printf("Usage: <host> <port>\n");
     printf("Example: 127.0.0.1 5151\n");
     exit(EXIT_FAILURE);
 }
@@ -99,7 +99,7 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
 
     serverPort = htons(serverPort);
 
-    if (0 == strcmp(version, "v4"))
+    if (0 == strcmp(version, "ipv4"))
     {
         struct sockaddr_in *addressV4 = (struct sockaddr_in *)storage;
         addressV4->sin_family = AF_INET;
@@ -108,7 +108,7 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
         return EXIT_SUCCESS;
     }
 
-    if (0 == strcmp(version, "v6"))
+    if (0 == strcmp(version, "ipv6"))
     {
         struct sockaddr_in6 *addressV6 = (struct sockaddr_in6 *)storage;
         addressV6->sin6_family = AF_INET6;
@@ -118,4 +118,25 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
     }
 
     return EXIT_FAILURE;
+}
+
+int menu()
+{
+    char input[3];
+
+    if (fgets(input, sizeof(input), stdin) != NULL)
+    {
+        if (input[0] == '0')
+            return 0;
+
+        if (input[0] == '1')
+            return 1;
+
+        return menu();
+    }
+    else
+    {
+        log_exit("Error reading input.\n");
+        exit(1);
+    }
 }
