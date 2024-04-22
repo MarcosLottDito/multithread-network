@@ -31,12 +31,6 @@ int main(int argc, char **argv)
             if (0 != connect(clientSocket, address, sizeof(storage)))
                 log_exit("Error at connect");
 
-            char addressString[BUFSZ];
-            address_to_string(address, addressString, BUFSZ);
-
-            char buf[BUFSZ];
-            memset(buf, 0, BUFSZ);
-
             int serverResponse = -1;
             while (serverResponse == -1)
             {
@@ -54,27 +48,31 @@ int main(int argc, char **argv)
             if (serverResponse == 0)
                 continue;
 
-            tcflush(STDIN_FILENO, TCIFLUSH);
+            char addressString[BUFSZ];
+            address_to_string(address, addressString, BUFSZ);
+
+            char buf[BUFSZ];
+            memset(buf, 0, BUFSZ);
+
+            Coordinate clientCoordinate = {-19.9259, -43.9342};
+            sprintf(buf, "%lf %lf", clientCoordinate.latitude, clientCoordinate.longitude);
+
+            size_t bytesWritten = send(clientSocket, buf, strlen(buf) + 1, 0);
+            if (bytesWritten != strlen(buf) + 1)
+                log_exit("Error at send");
+
+            memset(buf, 0, BUFSZ);
             while (1)
             {
-                printf("Enter a message (or 'exit' to quit): ");
-                fgets(buf, BUFSZ - 1, stdin);
-
-                // If the user types 'exit', break the loop
-                if (strncmp(buf, "exit", 4) == 0)
-                {
-                    break;
-                }
-
-                size_t bytesWritten = send(clientSocket, buf, strlen(buf) + 1, 0);
-                if (bytesWritten != strlen(buf) + 1)
-                    log_exit("Error at send");
-
-                memset(buf, 0, BUFSZ);
                 bytesWritten = recv(clientSocket, buf, BUFSZ - 1, 0);
 
-                if (bytesWritten == 0)
-                    break; // Connection closed
+                if (bytesWritten == 0) // Connection closed
+                {
+                    printf("O motorista chegou.\n");
+                    printf("<Encerrar programa>\n");
+                    return EXIT_SUCCESS;
+                }
+                printf("Server response: %s\n", buf);
             }
 
             close(clientSocket);
@@ -82,5 +80,6 @@ int main(int argc, char **argv)
         }
     }
 
+    printf("<Encerrar programa>");
     return EXIT_SUCCESS;
 }

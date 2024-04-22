@@ -12,12 +12,6 @@ void *clientThread(void *data)
     struct client_data *clientData = (struct client_data *)data;
     struct sockaddr *clientAddress = (struct sockaddr *)(&clientData->clientStorage);
 
-    char clientAddressString[BUFSZ];
-    address_to_string(clientAddress, clientAddressString, BUFSZ);
-
-    char buf[BUFSZ];
-    memset(buf, 0, BUFSZ);
-
     int clientResponse = -1;
 
     while (clientResponse == -1)
@@ -35,29 +29,43 @@ void *clientThread(void *data)
         }
     }
 
-    while (1)
+    char clientAddressString[BUFSZ];
+    address_to_string(clientAddress, clientAddressString, BUFSZ);
+
+    char buf[BUFSZ];
+    memset(buf, 0, BUFSZ);
+
+    size_t bytesRead = recv(clientData->clientSocket, buf, BUFSZ - 1, 0);
+
+    // If the client closed the connection, close thread
+    if (bytesRead <= 0)
     {
-        size_t bytesRead = recv(clientData->clientSocket, buf, BUFSZ - 1, 0);
+        memset(buf, 0, BUFSZ);
+        close(clientData->clientSocket);
+        pthread_exit(EXIT_SUCCESS);
+    }
 
-        // If the client closed the connection, break the loop
-        if (bytesRead <= 0)
-            break;
+    Coordinate serverCoordinate = {-19.9227, -43.9451};
 
-        printf("[mensagem]: %s, %d bytes: %s", clientAddressString, (int)bytesRead, buf);
+    Coordinate clientCoordinate;
+    sscanf(buf, "%lf %lf", &clientCoordinate.latitude, &clientCoordinate.longitude);
 
-        sprintf(buf, "Remote endpoint: %.1000s\n", clientAddressString);
+    double distance = distance_between_coordinates(clientCoordinate, serverCoordinate);
+
+    for (int i = 0; i < 5; i++)
+    {
+        sprintf(buf, "Distance from server: %f\n", distance);
         size_t bytesWritten = send(clientData->clientSocket, buf, strlen(buf) + 1, 0);
 
         if (bytesWritten != strlen(buf) + 1)
             log_exit("Error at send");
 
-        // Clear the buffer after sending a response
         memset(buf, 0, BUFSZ);
+        sleep(2); // Wait for 2 seconds
     }
 
-    // Move the close function outside the while loop
+    memset(buf, 0, BUFSZ);
     close(clientData->clientSocket);
-
     pthread_exit(EXIT_SUCCESS);
 }
 

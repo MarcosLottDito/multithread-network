@@ -1,9 +1,30 @@
 #include "common.h"
+#include <stdio.h>
+#include <math.h>
 
-void log_exit(const char *message)
+#define M_PI 3.14159265358979323846
+
+#define RADIUS_EARTH_KM 6371.0
+
+int menu()
 {
-    perror(message);
-    exit(EXIT_FAILURE);
+    char input[3];
+
+    if (fgets(input, sizeof(input), stdin) != NULL)
+    {
+        if (input[0] == '0')
+            return 0;
+
+        if (input[0] == '1')
+            return 1;
+
+        return menu();
+    }
+    else
+    {
+        log_exit("Error reading input.\n");
+        exit(1);
+    }
 }
 
 void server_usage()
@@ -20,38 +41,10 @@ void client_usage()
     exit(EXIT_FAILURE);
 }
 
-int address_parse(const char *address, const char *port, struct sockaddr_storage *storage)
+void log_exit(const char *message)
 {
-    if (address == NULL || port == NULL)
-        return EXIT_FAILURE;
-
-    uint16_t portNumber = (uint16_t)atoi(port);
-    if (portNumber == 0)
-        return EXIT_FAILURE;
-
-    portNumber = htons(portNumber);
-
-    struct in_addr inAdressV4;
-    if (inet_pton(AF_INET, address, &inAdressV4))
-    {
-        struct sockaddr_in *adressV4 = (struct sockaddr_in *)storage;
-        adressV4->sin_family = AF_INET;
-        adressV4->sin_port = portNumber;
-        adressV4->sin_addr = inAdressV4;
-        return EXIT_SUCCESS;
-    }
-
-    struct in6_addr inAdressV6;
-    if (inet_pton(AF_INET6, address, &inAdressV6))
-    {
-        struct sockaddr_in6 *adressV6 = (struct sockaddr_in6 *)storage;
-        adressV6->sin6_family = AF_INET6;
-        adressV6->sin6_port = portNumber;
-        memcpy(&(adressV6->sin6_addr), &inAdressV6, sizeof(inAdressV6));
-        return EXIT_SUCCESS;
-    }
-
-    return EXIT_FAILURE;
+    perror(message);
+    exit(EXIT_FAILURE);
 }
 
 void address_to_string(const struct sockaddr *address, char *string, size_t stringSize)
@@ -120,23 +113,58 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
     return EXIT_FAILURE;
 }
 
-int menu()
+int address_parse(const char *address, const char *port, struct sockaddr_storage *storage)
 {
-    char input[3];
+    if (address == NULL || port == NULL)
+        return EXIT_FAILURE;
 
-    if (fgets(input, sizeof(input), stdin) != NULL)
+    uint16_t portNumber = (uint16_t)atoi(port);
+    if (portNumber == 0)
+        return EXIT_FAILURE;
+
+    portNumber = htons(portNumber);
+
+    struct in_addr inAdressV4;
+    if (inet_pton(AF_INET, address, &inAdressV4))
     {
-        if (input[0] == '0')
-            return 0;
-
-        if (input[0] == '1')
-            return 1;
-
-        return menu();
+        struct sockaddr_in *adressV4 = (struct sockaddr_in *)storage;
+        adressV4->sin_family = AF_INET;
+        adressV4->sin_port = portNumber;
+        adressV4->sin_addr = inAdressV4;
+        return EXIT_SUCCESS;
     }
-    else
+
+    struct in6_addr inAdressV6;
+    if (inet_pton(AF_INET6, address, &inAdressV6))
     {
-        log_exit("Error reading input.\n");
-        exit(1);
+        struct sockaddr_in6 *adressV6 = (struct sockaddr_in6 *)storage;
+        adressV6->sin6_family = AF_INET6;
+        adressV6->sin6_port = portNumber;
+        memcpy(&(adressV6->sin6_addr), &inAdressV6, sizeof(inAdressV6));
+        return EXIT_SUCCESS;
     }
+
+    return EXIT_FAILURE;
+}
+
+double degrees_to_radians(double degrees)
+{
+    return degrees * M_PI / 180.0;
+}
+
+double haversine(double lat1, double lon1, double lat2, double lon2)
+{
+    double dLat = degrees_to_radians(lat2 - lat1);
+    double dLon = degrees_to_radians(lon2 - lon1);
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+               cos(degrees_to_radians(lat1)) * cos(degrees_to_radians(lat2)) *
+                   sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = RADIUS_EARTH_KM * c;
+    return distance;
+}
+
+double distance_between_coordinates(Coordinate coord1, Coordinate coord2)
+{
+    return haversine(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude);
 }
