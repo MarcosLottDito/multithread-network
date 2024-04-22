@@ -4,7 +4,7 @@
 
 #define M_PI 3.14159265358979323846
 
-#define RADIUS_EARTH_KM 6371.0
+#define RADIUS_EARTH_M 6371000.0
 
 int menu()
 {
@@ -160,11 +160,11 @@ double haversine(double lat1, double lon1, double lat2, double lon2)
                cos(degrees_to_radians(lat1)) * cos(degrees_to_radians(lat2)) *
                    sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double distance = RADIUS_EARTH_KM * c;
+    double distance = RADIUS_EARTH_M * c;
     return distance;
 }
 
-double distance_between_coordinates(Coordinate coord1, Coordinate coord2)
+int distance_between_coordinates(Coordinate coord1, Coordinate coord2)
 {
-    return haversine(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude);
+    return (int)haversine(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude);
 }

@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
                 if (bytesWritten == 0) // Connection closed
                 {
-                    printf("O motorista chegou.\n");
+                    printf("O motorista chegou!\n");
                     printf("<Encerrar programa>\n");
                     return EXIT_SUCCESS;
                 }
@@ -80,6 +80,6 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("<Encerrar programa>");
+    printf("<Encerrar programa>\n");
     return EXIT_SUCCESS;
 }

@@ -50,19 +50,23 @@ void *clientThread(void *data)
     Coordinate clientCoordinate;
     sscanf(buf, "%lf %lf", &clientCoordinate.latitude, &clientCoordinate.longitude);
 
-    double distance = distance_between_coordinates(clientCoordinate, serverCoordinate);
+    int distance = distance_between_coordinates(clientCoordinate, serverCoordinate);
 
-    for (int i = 0; i < 5; i++)
+    while (distance > 0)
     {
-        sprintf(buf, "Distance from server: %f\n", distance);
+        sprintf(buf, "Motorista a %dm\n", distance);
         size_t bytesWritten = send(clientData->clientSocket, buf, strlen(buf) + 1, 0);
 
         if (bytesWritten != strlen(buf) + 1)
             log_exit("Error at send");
 
+        distance -= 400;
+
         memset(buf, 0, BUFSZ);
         sleep(2); // Wait for 2 seconds
     }
+
+    printf("O motorista chegou!\n");
 
     memset(buf, 0, BUFSZ);
     close(clientData->clientSocket);
