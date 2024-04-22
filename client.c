@@ -25,25 +25,27 @@ int main(int argc, char **argv)
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
 
-    printf("Enter a message: ");
-    fgets(buf, BUFSZ - 1, stdin);
-    size_t bytesWritten = send(clientSocket, buf, strlen(buf) + 1, 0);
-    if (bytesWritten != strlen(buf) + 1)
-        log_exit("Error at send");
-
-    memset(buf, 0, BUFSZ);
-    unsigned int totalBytesRead = 0;
     while (1)
     {
-        bytesWritten = recv(clientSocket, buf + totalBytesRead, BUFSZ - totalBytesRead, 0);
+        printf("Enter a message (or 'exit' to quit): ");
+        fgets(buf, BUFSZ - 1, stdin);
+
+        // If the user types 'exit', break the loop
+        if (strncmp(buf, "exit", 4) == 0)
+        {
+            break;
+        }
+
+        size_t bytesWritten = send(clientSocket, buf, strlen(buf) + 1, 0);
+        if (bytesWritten != strlen(buf) + 1)
+            log_exit("Error at send");
+
+        memset(buf, 0, BUFSZ);
+        bytesWritten = recv(clientSocket, buf, BUFSZ - 1, 0);
 
         if (bytesWritten == 0)
             break; // Connection closed
-
-        totalBytesRead += bytesWritten;
     }
-
-    puts(buf);
 
     close(clientSocket);
 

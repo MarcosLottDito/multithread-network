@@ -18,15 +18,30 @@ void *clientThread(void *data)
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
-    size_t bytesRead = recv(clientData->clientSocket, buf, BUFSZ - 1, 0);
-    printf("[mensagem]: %s, %d bytes: %s", clientAddressString, (int)bytesRead, buf);
 
-    sprintf(buf, "Remote endpoint: %.1000s\n", clientAddressString);
-    bytesRead = send(clientData->clientSocket, buf, strlen(buf) + 1, 0);
+    while (1)
+    {
+        size_t bytesRead = recv(clientData->clientSocket, buf, BUFSZ - 1, 0);
 
-    if (bytesRead != strlen(buf) + 1)
-        log_exit("Error at send");
+        // If the client closed the connection, break the loop
+        if (bytesRead <= 0)
+        {
+            break;
+        }
 
+        printf("[mensagem]: %s, %d bytes: %s", clientAddressString, (int)bytesRead, buf);
+
+        sprintf(buf, "Remote endpoint: %.1000s\n", clientAddressString);
+        size_t bytesWritten = send(clientData->clientSocket, buf, strlen(buf) + 1, 0);
+
+        if (bytesWritten != strlen(buf) + 1)
+            log_exit("Error at send");
+
+        // Clear the buffer after sending a response
+        memset(buf, 0, BUFSZ);
+    }
+
+    // Move the close function outside the while loop
     close(clientData->clientSocket);
 
     pthread_exit(EXIT_SUCCESS);
