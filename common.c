@@ -1,22 +1,22 @@
 #include "common.h"
-#include <stdio.h>
-#include <math.h>
-
-#define M_PI 3.14159265358979323846
-
-#define RADIUS_EARTH_M 6371000.0
 
 int menu()
 {
-    char input[3];
+    char input[CHARSZ];
 
     if (fgets(input, sizeof(input), stdin) != NULL)
     {
-        if (input[0] == '0')
+        if (input[0] == EXIT)
             return 0;
 
-        if (input[0] == '1')
+        if (input[0] == LORD_OF_THE_RINGS)
             return 1;
+
+        if (input[0] == THE_GODFATHER)
+            return 2;
+
+        if (input[0] == FIGHT_CLUB)
+            return 3;
 
         return menu();
     }
@@ -55,6 +55,7 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
         return EXIT_FAILURE;
 
     serverPort = htons(serverPort);
+    memset(storage, 0, sizeof(*storage));
 
     if (0 == strcmp(version, "ipv4"))
     {
@@ -83,6 +84,7 @@ int address_parse(const char *address, const char *port, struct sockaddr_storage
         return EXIT_FAILURE;
 
     uint16_t portNumber = (uint16_t)atoi(port);
+
     if (portNumber == 0)
         return EXIT_FAILURE;
 
@@ -111,24 +113,77 @@ int address_parse(const char *address, const char *port, struct sockaddr_storage
     return EXIT_FAILURE;
 }
 
-double degrees_to_radians(double degrees)
+void getLordOfTheRings(int message, char *buffer)
 {
-    return degrees * M_PI / 180.0;
+    switch (message)
+    {
+    case 1:
+        strcpy(buffer, "Um anel para a todos governar\n");
+        break;
+    case 2:
+        strcpy(buffer, "Na terra de Mordor onde as sombras se deitam\n");
+        break;
+    case 3:
+        strcpy(buffer, "Não é o que temos, mas o que fazemos com o que temos\n");
+        break;
+    case 4:
+        strcpy(buffer, "Não há mal que sempre dure\n");
+        break;
+    case 5:
+        strcpy(buffer, "O mundo está mudando, senhor Frodo\n");
+        break;
+    default:
+        log_exit("Invalid message\n");
+        break;
+    }
 }
 
-double haversine(double lat1, double lon1, double lat2, double lon2)
+void getTheGodfather(int message, char *buffer)
 {
-    double dLat = degrees_to_radians(lat2 - lat1);
-    double dLon = degrees_to_radians(lon2 - lon1);
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-               cos(degrees_to_radians(lat1)) * cos(degrees_to_radians(lat2)) *
-                   sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double distance = RADIUS_EARTH_M * c;
-    return distance;
+    switch (message)
+    {
+    case 1:
+        strcpy(buffer, "Vou fazer uma oferta que ele não pode recusar\n");
+        break;
+    case 2:
+        strcpy(buffer, "Mantenha seus amigos por perto e seus inimigos mais perto ainda\n");
+        break;
+    case 3:
+        strcpy(buffer, "Não é o que temos, mas o que fazemos com o que temos\n");
+        break;
+    case 4:
+        strcpy(buffer, "A vingança é um prato que se come frio\n");
+        break;
+    case 5:
+        strcpy(buffer, "Nunca deixe que ninguém saiba o que você está pensando\n");
+        break;
+    default:
+        log_exit("Invalid message\n");
+        break;
+    }
 }
 
-int distance_between_coordinates(Coordinate coord1, Coordinate coord2)
+void getFightClub(int message, char *buffer)
 {
-    return (int)haversine(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude);
+    switch (message)
+    {
+    case 1:
+        strcpy(buffer, "Primeira regra do Clube da Luta: você não fala sobre o Clube da Luta\n");
+        break;
+    case 2:
+        strcpy(buffer, "Segunda regra do Clube da Luta: você não fala sobre o Clube da Luta\n");
+        break;
+    case 3:
+        strcpy(buffer, "O que você possui acabará possuindo você\n");
+        break;
+    case 4:
+        strcpy(buffer, "É apenas depois de perder tudo que somos livres para fazer qualquer coisa\n");
+        break;
+    case 5:
+        strcpy(buffer, "Escolha suas lutas com sabedoria\n");
+        break;
+    default:
+        log_exit("Invalid message\n");
+        break;
+    }
 }
