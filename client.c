@@ -2,20 +2,20 @@
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
-        client_usage(argc, argv);
-
-    // storage for socket configuration
-    struct sockaddr_storage storage;
-
-    // set port, address and IP version correctly for the server connection
-    if (0 != client_init(argv[1], argv[2], &storage))
-        client_usage(argc, argv);
-
     char userResponse = UNSET;
 
     while (userResponse == UNSET)
     {
+        if (argc != 3)
+            client_usage(argc, argv);
+
+        // storage for socket configuration
+        struct sockaddr_storage storage;
+
+        // set port, address and IP version correctly for the server connection
+        if (0 != client_init(argv[1], argv[2], &storage))
+            client_usage(argc, argv);
+
         printf("0 - Sair\n");
         printf("1 - Senhor dos Anéis\n");
         printf("2 - O Poderoso Chefão\n");
@@ -63,12 +63,9 @@ int main(int argc, char **argv)
                     log_exit("Error at recvfrom or timeout exceeded");
 
                 if (bytesReceived == 0) // sender has closed the connection
-                {
-                    userResponse = UNSET;
                     break;
-                }
-                printf("%s\n", buffer);
 
+                printf("%s\n", buffer);
                 memset(buffer, 0, BUFSZ);
             }
 
