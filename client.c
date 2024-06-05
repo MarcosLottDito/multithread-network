@@ -5,9 +5,16 @@ int main(int argc, char **argv)
     if (argc != 3)
         client_usage(argc, argv);
 
-    int userResponse = -1;
+    // storage for socket configuration
+    struct sockaddr_storage storage;
 
-    while (userResponse == -1)
+    // set port, address and IP version correctly for the server connection
+    if (0 != client_init(argv[1], argv[2], &storage))
+        client_usage(argc, argv);
+
+    char userResponse = UNSET;
+
+    while (userResponse == UNSET)
     {
         printf("0 - Sair\n");
         printf("1 - Senhor dos Anéis\n");
@@ -15,15 +22,12 @@ int main(int argc, char **argv)
         printf("3 - Clube da Luta\n");
 
         userResponse = menu();
-        if (userResponse == 0)
+        if (userResponse == EXIT)
             break;
 
         else
         {
-            struct sockaddr_storage storage;
-            if (0 != address_parse(argv[1], argv[2], &storage))
-                client_usage(argc, argv);
-
+            // create a socket based on the stoaage configuration (IP family, UDP connection, 0 for protocol)
             int clientSocket = socket(storage.ss_family, SOCK_DGRAM, 0);
             if (clientSocket == -1)
                 log_exit("Error at socket creation");
@@ -31,31 +35,45 @@ int main(int argc, char **argv)
             char buffer[BUFSZ];
             memset(buffer, 0, BUFSZ);
 
+            // The sockaddr structure is used in many network functions to hold IP address and port information.
             struct sockaddr *address = (struct sockaddr *)(&storage);
             socklen_t addressLength = sizeof(storage);
 
-            if (-1 == sendto(clientSocket, userResponse, strlen(userResponse) + 1, 0,
+            // send the user response to the server and check for errors
+            if (-1 == sendto(clientSocket, &userResponse, CHARSZ, 0,
                              (struct sockaddr *)&storage, addressLength))
                 log_exit("Error at sendto");
 
+            struct timeval timeout;
+            timeout.tv_sec = TIMEOUT_SECONDS; // Set timeout in seconds
+
+            // Set the timeout for recvfrom
+            if (setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+            {
+                perror("Error setting socket options");
+                exit(EXIT_FAILURE);
+            }
+
             while (1)
             {
+                // receive the server response and check for errors
                 int bytesReceived = recvfrom(clientSocket, buffer, BUFSZ, 0, address, &addressLength);
 
                 if (bytesReceived == -1)
-                    log_exit("Error at recvfrom");
+                    log_exit("Error at recvfrom or timeout exceeded");
 
-                if (bytesReceived == 0) // Connection closed
+                if (bytesReceived == 0) // sender has closed the connection
                 {
-                    userResponse = -1;
+                    userResponse = UNSET;
                     break;
                 }
                 printf("%s\n", buffer);
+
                 memset(buffer, 0, BUFSZ);
             }
 
-            close(clientSocket);
-            userResponse = -1;
+            close(clientSocket); // close the socket connection
+            userResponse = UNSET;
         }
     }
 

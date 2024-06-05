@@ -4,6 +4,9 @@
     "stdlib.h": "c",
     "common.h": "c",
     "socket.h": "c",
-    "select.h": "c"
+    "select.h": "c",
+    "string.h": "c",
+    "unistd.h": "c",
+    "inet.h": "c"
   }
 }

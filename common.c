@@ -1,22 +1,22 @@
 #include "common.h"
 
-int menu()
+char menu()
 {
     char input[CHARSZ];
 
     if (fgets(input, sizeof(input), stdin) != NULL)
     {
         if (input[0] == EXIT)
-            return 0;
+            return EXIT;
 
         if (input[0] == LORD_OF_THE_RINGS)
-            return 1;
+            return LORD_OF_THE_RINGS;
 
         if (input[0] == THE_GODFATHER)
-            return 2;
+            return THE_GODFATHER;
 
         if (input[0] == FIGHT_CLUB)
-            return 3;
+            return FIGHT_CLUB;
 
         return menu();
     }
@@ -43,7 +43,7 @@ void client_usage()
 
 void log_exit(const char *message)
 {
-    perror(message);
+    printf("%s\n", message);
     exit(EXIT_FAILURE);
 }
 
@@ -54,9 +54,12 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
     if (serverPort == 0)
         return EXIT_FAILURE;
 
-    serverPort = htons(serverPort);
+    // convert port number to network byte order
+    serverPort = htons(serverPort); // host to network short
     memset(storage, 0, sizeof(*storage));
 
+    // based on the IP version, it will define the correct struct for
+    // the address and port and address family
     if (0 == strcmp(version, "ipv4"))
     {
         struct sockaddr_in *addressV4 = (struct sockaddr_in *)storage;
@@ -78,24 +81,27 @@ int server_init(const char *version, const char *port, struct sockaddr_storage *
     return EXIT_FAILURE;
 }
 
-int address_parse(const char *address, const char *port, struct sockaddr_storage *storage)
+int client_init(const char *address, const char *port, struct sockaddr_storage *storage)
 {
     if (address == NULL || port == NULL)
         return EXIT_FAILURE;
 
-    uint16_t portNumber = (uint16_t)atoi(port);
+    uint16_t serverPort = (uint16_t)atoi(port);
 
-    if (portNumber == 0)
+    if (serverPort == 0)
         return EXIT_FAILURE;
 
-    portNumber = htons(portNumber);
+    // convert port number to network byte order
+    serverPort = htons(serverPort); // host to network short
 
+    // based on the IP version, it will define the correct struct for
+    // the address and port and address family
     struct in_addr inAdressV4;
     if (inet_pton(AF_INET, address, &inAdressV4))
     {
         struct sockaddr_in *adressV4 = (struct sockaddr_in *)storage;
         adressV4->sin_family = AF_INET;
-        adressV4->sin_port = portNumber;
+        adressV4->sin_port = serverPort;
         adressV4->sin_addr = inAdressV4;
         return EXIT_SUCCESS;
     }
@@ -105,7 +111,7 @@ int address_parse(const char *address, const char *port, struct sockaddr_storage
     {
         struct sockaddr_in6 *adressV6 = (struct sockaddr_in6 *)storage;
         adressV6->sin6_family = AF_INET6;
-        adressV6->sin6_port = portNumber;
+        adressV6->sin6_port = serverPort;
         memcpy(&(adressV6->sin6_addr), &inAdressV6, sizeof(inAdressV6));
         return EXIT_SUCCESS;
     }
